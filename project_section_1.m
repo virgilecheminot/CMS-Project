@@ -22,28 +22,27 @@ fprintf('m*=%f ; r*=%f\n',m_star,r_star);
 
 %% Compute the steady-state T_M0 :
 v0 = 15;                % steady-state vehicle speed [m/s]
-v_w0 = -3.5;             % steady-state wind speed [m/s]
+v_w0 = 3.5;             % steady-state wind speed [m/s]
 
 ratio = R/(tau_2*tau_1);
-F_D0 = 1/2*rho_air*Cx*A_front*(v0-v_w0)^2;
+F_D0 = 1/2*rho_air*Cx*A_front*(v0+v_w0)^2;
 F_R0 = M*g*C_RR*(1+k_RR*v0);
 P = M*g*sin(alpha);
 damp_0 = r_star*v0;
 
 T_M0 = ratio*(F_D0 + F_R0 + P + damp_0);
 fprintf('Steady-state motor torque : %f N*m\n',T_M0);
+ 
+r_gen = r_star + C_RR*k_RR*M*g + rho_air*Cx*A_front*(v0 + v_w0);
 
-%% Write the final equation of motion
-r_gen = r_star + C_RR*k_RR*M*g+rho_air*Cx*A_front*(v0-v_w0);
-
-num_G = tau_1*tau_2/R;
-den_G = [m_star,r_gen];
-
-num_D = rho_air*Cx*A_front*(v0-v_w0);
-den_D = den_G;
-
-G = tf(num_G,den_G);
-D = tf(num_D,den_D);
-
-disp(pole(G));
+numG = 1/ratio;
+denG = [m_star, r_gen];
+G = tf(numG, denG);
+figure;
 asymp(G);
+
+numD = -rho_air*Cx*A_front*(v0+v_w0);
+denD = denG;
+D = tf(numD, denD);
+figure;
+asymp(D);
