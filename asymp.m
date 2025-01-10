@@ -1,4 +1,4 @@
-function asymp(sys,wlow,whigh);
+function asymp(sys,wlow,whigh)
 
 % The function asymp() corresponds to bode(), 
 % but it also plots asymptotes for the magnitude 
