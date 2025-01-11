@@ -17,6 +17,9 @@ A_front = 2.2;          % front surface of the vehicle [m^2]
 Cx = 0.3;               % drag coefficient [-]
 C_RR = 0.01;            % rolling coefficient [-]
 k_RR = 0.0002;          % rolling coefficient [s/m]
+Ra = 0.05;              % Armature resistance [Ohm]
+La = 0.00015;           % Armature inductance [H]
+Kphi = 0.8;             % Motor constant [Nm/A]
 
 m_star = J_M*(tau_1*tau_2/Rw)^2+4*J_wheel/(Rw^2)+M;
 r_star = (r1+r2)*(tau_2/Rw)^2;
@@ -112,3 +115,7 @@ LD = K2 * feedback(G_D, Kc*R);
 figure;
 bode(LD);
 title('Bode plot of the closed-loop wind disturbance transfer function');
+
+%% Part 3 : Permanent magnet DC motor
+Va0 = Ra*T_M0/Kphi + tau_1*tau_2/Rw*Kphi*v0;
+fprintf('Steady-state voltage Va0 : %f V\n',Va0);
