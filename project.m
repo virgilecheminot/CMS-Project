@@ -1,5 +1,7 @@
 close all; clear; clc;
 
+display_part = 3;
+
 %% System data
 g = 9.81;               % gravity acceleration [m/s^2]
 M = 1500;               % vehicle mass [kg]
@@ -23,7 +25,7 @@ Kphi = 0.8;             % Motor constant [Nm/A]
 
 m_star = J_M*(tau_1*tau_2/Rw)^2+4*J_wheel/(Rw^2)+M;
 r_star = (r1+r2)*(tau_2/Rw)^2;
-fprintf('m*=%f ; r*=%f\n',m_star,r_star);
+fprintf('m*=%f ; r*=%f\n\n',m_star,r_star);
 
 %% Part 1 : Steady-state analysis
 v0 = 15;                % steady-state vehicle speed [m/s]
@@ -43,16 +45,20 @@ r_gen = r_star + C_RR*k_RR*M*g + rho_air*Cx*A_front*(v0 + v_w0);
 numG = 1/ratio;
 denG = [m_star, r_gen];
 G = tf(numG, denG); % TF of v/T_M
-figure;
-bode(G);
-% poles = pole(G);
-% fprintf('Poles of G : %f\n',poles);
+poles = pole(G);
+disp(['Poles of G : ', num2str(poles')]);
 
 numD = -rho_air*Cx*A_front*(v0+v_w0);
 denD = denG;
 D = tf(numD, denD); % TF of v/v_wind
-figure;
-bode(D);
+if display_part == 1
+    figure;
+    asymp(G);
+    title('Bode plot of the transfer function G=v/T_M');
+    figure;
+    asymp(D);
+    title('Bode plot of the transfer function D=v/v_wind');
+end
 
 %% Part 2 : PI regulator
 Kp = 75; % Proportional gain
@@ -62,60 +68,82 @@ R = pid(Kp, Ki);
 
 % Open-loop transfer function
 RG = series(R, G);
-fprintf('Poles of RG : %f\n',pole(RG)');
-fprintf('Zeros of RG : %f\n',zero(RG)');
+disp(['Poles of RG : ', num2str(pole(RG)')]);
+disp(['Zeros of RG : ', num2str(zero(RG)')]);
 
 
 % Closed-loop transfer function
 L = feedback(RG, 1);
 
 % Stability analysis
-figure;
-margin(RG);
-title(['Bode plot with Ti = ', num2str(Ti)]);
+if display_part == 2
+    figure;
+    margin(RG);
+    title(['Bode plot with Ti = ', num2str(Ti)]);
 
-figure;
-nyquist(RG);
-title(['Nyquist plot with Ti = ', num2str(Ti)]);
+    figure;
+    nyquist(RG);
+    title(['Nyquist plot with Ti = ', num2str(Ti)]);
 
-figure;
-rlocus(RG);
-title(['Root locus with Ti = ', num2str(Ti)]);
+    figure;
+    rlocus(RG);
+    title(['Root locus with Ti = ', num2str(Ti)]);
 
-% Step response performance
-figure;
-step(L);
-title(['Step response with Ti = ', num2str(Ti)]);
+    % Step response performance
+    figure;
+    step(L);
+    title(['Step response with Ti = ', num2str(Ti)]);
+end
 
 stp_nfo = stepinfo(L);
 tr = stp_nfo.RiseTime;
 Po = stp_nfo.Overshoot;
 ts = stp_nfo.SettlingTime;
 BW = bandwidth(L);
+fprintf('Step response performance with Ti = %f\n',Ti);
 fprintf('Rise time : %f\n',tr);
 fprintf('Overshoot : %f\n',Po);
 fprintf('Settling time : %f\n',ts);
 fprintf('Bandwidth : %f\n',BW);
 
-% Bode diagrams of the open-loop transfer function
-figure;
-bode(RG);
-title('Bode plot of the open-loop transfer function');
+if display_part == 2
+    % Bode diagrams of the open-loop transfer function
+    figure;
+    asymp(RG);
+    title('Bode plot of the open-loop transfer function');
 
-% Bode diagrams of the closed-loop transfer function
-figure;
-bode(L);
-title('Bode plot of the closed-loop transfer function');
+    % Bode diagrams of the closed-loop transfer function
+    figure;
+    asymp(L);
+    title('Bode plot of the closed-loop transfer function');
+end
 
 % Bode diagrams of the closed-loop wind disturbance transfer function
 K2 = -rho_air*Cx*A_front*(v0+v_w0);
 G_D = tf(1, denG);
 Kc = numG;
 LD = K2 * feedback(G_D, Kc*R);
-figure;
-bode(LD);
-title('Bode plot of the closed-loop wind disturbance transfer function');
+if display_part == 2
+    figure;
+    asymp(LD);
+    title('Bode plot of the closed-loop wind disturbance transfer function');
+end
 
 %% Part 3 : Permanent magnet DC motor
 Va0 = Ra*T_M0/Kphi + tau_1*tau_2/Rw*Kphi*v0;
-fprintf('Steady-state voltage Va0 : %f V\n',Va0);
+fprintf('\nSteady-state voltage Va0 : %f V\n',Va0);
+
+% Transfer function of the motor
+G1 = Kphi/ratio*tf(1, [La*m_star, (La*r_gen+Ra*m_star), Ra*r_gen]);
+G2 = tf(Kphi/ratio);
+GM = feedback(G1, G2);
+
+% Bode diagrams of the motor transfer function
+poles = pole(GM);
+disp(['Poles of GM : ', num2str(poles')]);
+
+if display_part == 3
+    figure;
+    asymp(GM);
+    title('Bode plot of the motor transfer function');
+end
