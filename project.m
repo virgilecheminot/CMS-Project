@@ -51,7 +51,7 @@ disp(['Poles of G : ', num2str(poles')]);
 numD = -rho_air*Cx*A_front*(v0+v_w0);
 denD = denG;
 D = tf(numD, denD); % TF of v/v_wind
-if display_part == 1
+if ismember(1, display_part)
     figure;
     asymp(G);
     title('Bode plot of the transfer function G=v/T_M');
@@ -76,7 +76,7 @@ disp(['Zeros of RG : ', num2str(zero(RG)')]);
 L = feedback(RG, 1);
 
 % Stability analysis
-if display_part == 2
+if ismember(2, display_part)
     figure;
     margin(RG);
     title(['Bode plot with Ti = ', num2str(Ti)]);
@@ -106,7 +106,7 @@ fprintf('Overshoot : %f\n',Po);
 fprintf('Settling time : %f\n',ts);
 fprintf('Bandwidth : %f\n',BW);
 
-if display_part == 2
+if ismember(2, display_part)
     % Bode diagrams of the open-loop transfer function
     figure;
     asymp(RG);
@@ -123,7 +123,7 @@ K2 = -rho_air*Cx*A_front*(v0+v_w0);
 G_D = tf(1, denG);
 Kc = numG;
 LD = K2 * feedback(G_D, Kc*R);
-if display_part == 2
+if ismember(2, display_part)
     figure;
     asymp(LD);
     title('Bode plot of the closed-loop wind disturbance transfer function');
@@ -133,7 +133,7 @@ end
 Va0 = Ra*T_M0/Kphi + tau_1*tau_2/Rw*Kphi*v0;
 fprintf('\nSteady-state voltage Va0 : %f V\n',Va0);
 
-% Transfer function of the motor
+% Closed-loop transfer function of the motor G = v/Va
 G1 = Kphi/ratio*tf(1, [La*m_star, (La*r_gen+Ra*m_star), Ra*r_gen]);
 G2 = tf(Kphi/ratio);
 GM = feedback(G1, G2);
@@ -142,8 +142,54 @@ GM = feedback(G1, G2);
 poles = pole(GM);
 disp(['Poles of GM : ', num2str(poles')]);
 
-if display_part == 3
+if ismember(3, display_part)
     figure;
-    asymp(GM);
+    bode(GM);
     title('Bode plot of the motor transfer function');
+end
+
+% PID regulator STILL NEED TO CHOOSE THE GAINS
+Kp = 75;
+Ti_values = 1.6;
+Td_values = 0.1;
+
+for Ti = Ti_values
+    for Td = Td_values
+        Ki = Kp / Ti;
+        Kd = Kp * Td;
+        R = pid(Kp, Ki, Kd);
+
+        % Open-loop transfer function
+        RG = series(R, GM);
+
+        % Closed-loop transfer function
+        L = feedback(RG, 1);
+
+        % Stability analysis
+        if ismember(3, display_part)
+            figure;
+            subplot(2, 2, 1);
+            margin(RG);
+            title(['Bode plot with Ti = ', num2str(Ti), ' and Td = ', num2str(Td)]);
+
+            subplot(2, 2, 2);
+            nyquist(RG);
+            title(['Nyquist plot with Ti = ', num2str(Ti), ' and Td = ', num2str(Td)]);
+
+            subplot(2, 2, 3);
+            rlocus(RG);
+            title(['Root locus with Ti = ', num2str(Ti), ' and Td = ', num2str(Td)]);
+
+            subplot(2, 2, 4);
+            step(L);
+            title(['Step response with Ti = ', num2str(Ti), ' and Td = ', num2str(Td)]);
+        end
+    end
+end
+
+% Bode diagrams of the open-loop transfer function
+if ismember(3, display_part)
+    figure;
+    asymp(RG);
+    title('Bode plot of the open-loop transfer function');
 end
