@@ -62,7 +62,7 @@ end
 
 %% Part 2 : PI regulator
 Kp = 75; % Proportional gain
-Ti = 100; % Integral time constant
+Ti = 103; % Integral time constant
 Ki = Kp / Ti; % Integral gain
 R = pid(Kp, Ki);
 
@@ -140,7 +140,9 @@ GM = feedback(G1, G2);
 
 % Bode diagrams of the motor transfer function
 poles = pole(GM);
+zeros = zero(GM);
 disp(['Poles of GM : ', num2str(poles')]);
+disp(['Zeros of GM : ', num2str(zeros')]);
 
 if ismember(3, display_part)
     figure;
@@ -149,9 +151,9 @@ if ismember(3, display_part)
 end
 
 % PID regulator STILL NEED TO CHOOSE THE GAINS
-Kp = 75;
-Ti_values = 1.6;
-Td_values = 0.1;
+Kp = 5;
+Ti_values = 1.5;
+Td_values = 0.01;
 
 for Ti = Ti_values
     for Td = Td_values
