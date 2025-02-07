@@ -78,7 +78,7 @@ L = feedback(RG, 1);
 % Stability analysis
 if ismember(2, display_part)
     figure;
-    margin(RG);
+    asymp(RG);
     title(['Bode plot with Ti = ', num2str(Ti)]);
 
     figure;
@@ -146,7 +146,7 @@ disp(['Zeros of GM : ', num2str(zeros')]);
 
 if ismember(3, display_part)
     figure;
-    bode(GM);
+    asymp(GM);
     title('Bode plot of the motor transfer function');
 end
 
