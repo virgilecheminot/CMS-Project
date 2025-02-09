@@ -61,7 +61,7 @@ if ismember(1, display_part)
 end
 
 %% Part 2 : PI regulator
-Kp = 75; % Proportional gain
+Kp = 360; % Proportional gain
 Ti = 103; % Integral time constant
 Ki = Kp / Ti; % Integral gain
 R = pid(Kp, Ki);
@@ -152,41 +152,37 @@ end
 
 % PID regulator STILL NEED TO CHOOSE THE GAINS
 Kp = 5;
-Ti_values = 1.5;
-Td_values = 0.01;
+Ti = 1.5;
+Td = 0.01;
 
-for Ti = Ti_values
-    for Td = Td_values
-        Ki = Kp / Ti;
-        Kd = Kp * Td;
-        R = pid(Kp, Ki, Kd);
+Ki = Kp / Ti;
+Kd = Kp * Td;
+R = pid(Kp, Ki, Kd);
 
-        % Open-loop transfer function
-        RG = series(R, GM);
+% Open-loop transfer function
+RG = series(R, GM);
 
-        % Closed-loop transfer function
-        L = feedback(RG, 1);
+% Closed-loop transfer function
+L = feedback(RG, 1);
 
-        % Stability analysis
-        if ismember(3, display_part)
-            figure;
-            subplot(2, 2, 1);
-            margin(RG);
-            title(['Bode plot with Ti = ', num2str(Ti), ' and Td = ', num2str(Td)]);
+% Stability analysis
+if ismember(3, display_part)
+    figure;
+    subplot(2, 2, 1);
+    margin(RG);
+    title(['Bode plot with Ti = ', num2str(Ti), ' and Td = ', num2str(Td)]);
 
-            subplot(2, 2, 2);
-            nyquist(RG);
-            title(['Nyquist plot with Ti = ', num2str(Ti), ' and Td = ', num2str(Td)]);
+    subplot(2, 2, 2);
+    nyquist(RG);
+    title(['Nyquist plot with Ti = ', num2str(Ti), ' and Td = ', num2str(Td)]);
 
-            subplot(2, 2, 3);
-            rlocus(RG);
-            title(['Root locus with Ti = ', num2str(Ti), ' and Td = ', num2str(Td)]);
+    subplot(2, 2, 3);
+    rlocus(RG);
+    title(['Root locus with Ti = ', num2str(Ti), ' and Td = ', num2str(Td)]);
 
-            subplot(2, 2, 4);
-            step(L);
-            title(['Step response with Ti = ', num2str(Ti), ' and Td = ', num2str(Td)]);
-        end
-    end
+    subplot(2, 2, 4);
+    step(L);
+    title(['Step response with Ti = ', num2str(Ti), ' and Td = ', num2str(Td)]);
 end
 
 % Bode diagrams of the open-loop transfer function
@@ -194,4 +190,18 @@ if ismember(3, display_part)
     figure;
     asymp(RG);
     title('Bode plot of the open-loop transfer function');
+end
+
+% Wind disturbance tf
+K2 = -rho_air*Cx*A_front*(v0+v_w0);
+G1 = tf(1, denG);
+G2 = Kphi/ratio + R;
+G3 = Kphi/ratio * tf(1, [La, Ra]) * G2;
+LD = K2 * feedback(G1, G3);
+
+% Bode diagrams of the closed-loop wind disturbance transfer function
+if ismember(3, display_part)
+    figure;
+    asymp(LD);
+    title('Bode plot of the closed-loop wind disturbance transfer function');
 end
